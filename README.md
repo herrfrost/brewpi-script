@@ -1,6 +1,14 @@
 
-Installing InfluxDB 0.9.4.2 on Raspberry Pi
-===========================================
+Installing InfluxDB 0.9.4.2 & Grafana 2.0 on Raspberry Pi
+=========================================================
+
+Packages
+========
+
+```
+sudo apt-get install gawk mercurial bzr protobuf-compiler flex bison valgrind g++ make autoconf libtool libz-dev libbz2-dev curl rpm build-essential git wget libgflags-dev
+```
+
 
 
 Go 1.5
@@ -26,8 +34,6 @@ Source
 ------
 
 ```
-mkdir $HOME/gocodez
-export GOPATH=$HOME/gocodez
 go get github.com/influxdb/influxdb
 ```
 
@@ -105,3 +111,47 @@ sudo chown influxdb:influxdb /var/log/influxdb
 
 sudo update-rc.d influxdb defaults
 ```
+
+
+Grafana 2.0
+===========
+
+[https://github.com/grafana/grafana]
+
+NodeJS
+------
+
+
+```
+sudo apt-get update
+sudo apt-get install gcc-4.8 g++-4.8
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 20
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.6 20
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50
+
+cd $HOME
+wget node-arm.herokuapp.com/node_archive_armhf.deb
+sudo dpkg -i node_archive_armhf.deb
+```
+
+
+
+
+```
+gvm use go1.4 --default
+go get github.com/grafana/grafana
+cd $GOPATH/src/github.com/grafana/grafana
+go run build.go setup 
+godep restore 
+go build .
+
+npm install
+npm install -g grunt-cli
+grunt
+
+./grafana
+
+```
+
+
