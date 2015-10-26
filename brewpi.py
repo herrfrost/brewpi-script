@@ -72,7 +72,7 @@ import brewpiVersion
 import pinList
 import expandLogMessage
 import BrewPiProcess
-
+from DataLogging import dataLogger
 
 # Settings will be read from controller, initialize with same defaults as controller
 # This is mainly to show what's expected. Will all be overwritten on the first update from the controller
@@ -235,6 +235,7 @@ def changeWwwSetting(settingName, value):
     wwwSettingsFile.close()
 
 def setFiles():
+    #TODO : refactor data logging specifics
     global config
     global localJsonFileName
     global localCsvFileName
@@ -280,6 +281,9 @@ def setFiles():
 
     # create new empty json file
     brewpiJson.newEmptyFile(localJsonFileName)
+
+    # update data logger with these items as well
+    dataLog.setFiles(localJsonFileName, wwwJsonFileName, localCsvFileName, wwwCsvFileName)
 
 def startBeer(beerName):
     if config['dataLogging'] == 'active':
@@ -369,6 +373,8 @@ logMessage("Notification: Script started for beer '" + urllib.unquote(config['be
 # wait for 10 seconds to allow an Uno to reboot (in case an Uno is being used)
 time.sleep(float(config.get('startupDelay', 10)))
 
+logMessage("Initializing data logger")
+dataLog = dataLogger.DataLogger()
 
 logMessage("Checking software version on controller... ")
 hwVersion = brewpiVersion.getVersionFromSerial(ser)
@@ -434,29 +440,6 @@ run = 1
 
 startBeer(config['beerName'])
 outputTemperature = True
-
-prevTempJson = {
-    "BeerTemp": 0,
-    "FridgeTemp": 0,
-    "BeerAnn": None,
-    "FridgeAnn": None,
-    "RoomTemp": None,
-    "State": None,
-    "BeerSet": 0,
-    "FridgeSet": 0}
-
-def renameTempKey(key):
-    rename = {
-        "bt": "BeerTemp",
-        "bs": "BeerSet",
-        "ba": "BeerAnn",
-        "ft": "FridgeTemp",
-        "fs": "FridgeSet",
-        "fa": "FridgeAnn",
-        "rt": "RoomTemp",
-        "s": "State",
-        "t": "Time"}
-    return rename.get(key, key)
 
 while run:
     if config['dataLogging'] == 'active':
@@ -760,35 +743,7 @@ while run:
                         continue  # skip if logging is paused or stopped
 
                     # process temperature line
-                    newData = json.loads(line[2:])
-                    # copy/rename keys
-                    for key in newData:
-                        prevTempJson[renameTempKey(key)] = newData[key]
-
-                    newRow = prevTempJson
-                    # add to JSON file
-                    brewpiJson.addRow(localJsonFileName, newRow)
-                    # copy to www dir.
-                    # Do not write directly to www dir to prevent blocking www file.
-                    shutil.copyfile(localJsonFileName, wwwJsonFileName)
-                    #write csv file too
-                    csvFile = open(localCsvFileName, "a")
-                    try:
-                        lineToWrite = (time.strftime("%b %d %Y %H:%M:%S;") +
-                                       json.dumps(newRow['BeerTemp']) + ';' +
-                                       json.dumps(newRow['BeerSet']) + ';' +
-                                       json.dumps(newRow['BeerAnn']) + ';' +
-                                       json.dumps(newRow['FridgeTemp']) + ';' +
-                                       json.dumps(newRow['FridgeSet']) + ';' +
-                                       json.dumps(newRow['FridgeAnn']) + ';' +
-                                       json.dumps(newRow['State']) + ';' +
-                                       json.dumps(newRow['RoomTemp']) + '\n')
-                        csvFile.write(lineToWrite)
-                    except KeyError, e:
-                        logMessage("KeyError in line from controller: %s" % str(e))
-
-                    csvFile.close()
-                    shutil.copyfile(localCsvFileName, wwwCsvFileName)
+                    dataLog.datalogJsonCsvAndCopy(json.loads(line[2:]))
 
                 elif line[0] == 'D':
                     # debug message received

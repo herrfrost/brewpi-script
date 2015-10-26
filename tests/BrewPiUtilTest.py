@@ -21,3 +21,6 @@ class BrewPiUtilsTestCase(unittest.TestCase):
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xb0 in position 2: invalid start byte
         s = util.asciiToUnicode(s)
         simplejson.loads(s)
+
+if __name__ == '__main__':
+    unittest.main()
