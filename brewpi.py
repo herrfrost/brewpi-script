@@ -1,4 +1,4 @@
-#!/usr/bin/python
+﻿#!/usr/bin/python
 # Copyright 2012 BrewPi
 # This file is part of BrewPi.
 
@@ -72,7 +72,7 @@ import brewpiVersion
 import pinList
 import expandLogMessage
 import BrewPiProcess
-from DataLogging import dataLogger
+from datalogging import datalogger
 
 # Settings will be read from controller, initialize with same defaults as controller
 # This is mainly to show what's expected. Will all be overwritten on the first update from the controller
@@ -283,7 +283,7 @@ def setFiles():
     brewpiJson.newEmptyFile(localJsonFileName)
 
     # update data logger with these items as well
-    dataLog.setFiles(localJsonFileName, wwwJsonFileName, localCsvFileName, wwwCsvFileName)
+    dataLog.set_files(localJsonFileName, wwwJsonFileName, localCsvFileName, wwwCsvFileName)
 
 def startBeer(beerName):
     if config['dataLogging'] == 'active':
@@ -374,7 +374,7 @@ logMessage("Notification: Script started for beer '" + urllib.unquote(config['be
 time.sleep(float(config.get('startupDelay', 10)))
 
 logMessage("Initializing data logger")
-dataLog = dataLogger.DataLogger()
+dataLog = datalogger.DataLogger()
 
 logMessage("Checking software version on controller... ")
 hwVersion = brewpiVersion.getVersionFromSerial(ser)
@@ -743,7 +743,7 @@ while run:
                         continue  # skip if logging is paused or stopped
 
                     # process temperature line
-                    dataLog.datalogJsonCsvAndCopy(json.loads(line[2:]))
+                    dataLog.add_to_log(json.loads(line[2:]))
 
                 elif line[0] == 'D':
                     # debug message received
